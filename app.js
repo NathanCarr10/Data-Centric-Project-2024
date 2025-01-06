@@ -5,7 +5,7 @@ var app = express()
 
 // EJS
 app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, '.')) 
+app.set('views', path.join(__dirname, '.'))
 
 // Express
 app.use(express.urlencoded({ extended: true }))
@@ -88,6 +88,58 @@ app.post('/students/add', (req, res) => {
     .catch((error) => {
         errors.push('Database error occurred')
         res.render('addStudent', { errors: errors, sid: sid, name: name, age: age })
+    })
+})
+
+// Get Edit Student page
+app.get('/students/edit/:sid', (req, res) => {
+    pool.query('SELECT * FROM student WHERE sid = ?', [req.params.sid])
+    .then((result) => {
+        if (result.length > 0) {
+            res.render('editStudent', { student: result[0] })
+        } else {
+            res.send('Student not found')
+        }
+    })
+    .catch((error) => {
+        res.send('Database error occurred')
+    })
+})
+
+// Process Edit Student form
+app.post('/students/edit/:sid', (req, res) => {
+    let errors = []
+    let sid = req.params.sid
+    let name = req.body.name
+    let age = req.body.age
+
+    // Validate input
+    if (!name || name.length < 2) {
+        errors.push('Name must be at least 2 characters')
+    }
+    if (!age || age < 18) {
+        errors.push('Age must be 18 or older')
+    }
+
+    if (errors.length > 0) {
+        res.render('editStudent', { 
+            errors: errors, 
+            student: { sid: sid, name: name, age: age }
+        })
+        return
+    }
+
+    // Update student in database
+    pool.query('UPDATE student SET name = ?, age = ? WHERE sid = ?', [name, age, sid])
+    .then(() => {
+        res.redirect('/students')
+    })
+    .catch((error) => {
+        errors.push('Database error occurred')
+        res.render('editStudent', { 
+            errors: errors, 
+            student: { sid: sid, name: name, age: age }
+        })
     })
 })
 
