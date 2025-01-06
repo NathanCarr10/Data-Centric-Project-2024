@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Grades</title>
+</head>
+<body>
+    <h1>Student Grades</h1>
+    
+    <% var currentStudent = ''; %>
+    <% grades.forEach(function(grade) { %>
+        <% if (currentStudent !== grade.student_name) { %>
+            <% if (currentStudent !== '') { %>
+                </ul>
+            <% } %>
+            <h3><%= grade.student_name %></h3>
+            <ul>
+            <% currentStudent = grade.student_name; %>
+        <% } %>
+        
+        <% if (grade.module_name) { %>
+            <li>
+                <%= grade.module_name %>: <%= grade.grade %>
+            </li>
+        <% } %>
+    <% }); %>
+    
+    <% if (grades.length > 0) { %>
+        </ul>
+    <% } %>
+    
+    <p><a href="/">Home</a></p>
+</body>
+</html>
