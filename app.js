@@ -1,13 +1,13 @@
 var express = require('express')
 var pmysql = require('promise-mysql')
-var path = require('path')  // Add this line
+var path = require('path')
 var app = express()
 
-// Set up EJS
+// EJS
 app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, '.')) // This tells Express to look for views in the current directory
+app.set('views', path.join(__dirname, '.')) 
 
-// Middleware
+// Express
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
@@ -17,7 +17,7 @@ pmysql.createPool({
     connectionLimit: 3,
     host: 'localhost',
     user: 'root',
-    password: '',  // Your MySQL password
+    password: 'root',
     database: 'proj2024mysql'
 })
 .then((p) => {
@@ -40,6 +40,54 @@ app.get('/students', (req, res) => {
     })
     .catch((error) => {
         res.send(error)
+    })
+})
+
+// Add Student page
+app.get('/students/add', (req, res) => {
+    res.render('addStudent')
+})
+
+// Process Add Student form
+app.post('/students/add', (req, res) => {
+    let errors = []
+    let sid = req.body.sid
+    let name = req.body.name
+    let age = req.body.age
+
+    // Validate input
+    if (!sid || sid.length !== 4) {
+        errors.push('Student ID must be exactly 4 characters')
+    }
+    if (!name || name.length < 2) {
+        errors.push('Name must be at least 2 characters')
+    }
+    if (!age || age < 18) {
+        errors.push('Age must be 18 or older')
+    }
+
+    if (errors.length > 0) {
+        res.render('addStudent', { errors: errors, sid: sid, name: name, age: age })
+        return
+    }
+
+    // Check if student ID already exists
+    pool.query('SELECT * FROM student WHERE sid = ?', [sid])
+    .then((result) => {
+        if (result.length > 0) {
+            errors.push('Student with ID ' + sid + ' already exists')
+            res.render('addStudent', { errors: errors, sid: sid, name: name, age: age })
+        } else {
+            // Add student to database
+            return pool.query('INSERT INTO student (sid, name, age) VALUES (?, ?, ?)', [sid, name, age])
+            .then(() => {
+                res.redirect('/students')
+            })
+        }
+    })
+    .catch((error) => {
+        errors.push('Database error occurred')
+        res.render('addStudent', { errors: errors, sid: sid, name: name, age: age })
     })
 })
 

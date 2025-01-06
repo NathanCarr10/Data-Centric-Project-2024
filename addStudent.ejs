@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Student</title>
+</head>
+<body>
+    <h1>Add Student</h1>
+    <% if (typeof errors !== 'undefined') { %>
+        <ul style="color: red;">
+            <% errors.forEach(function(error) { %>
+                <li><%= error %></li>
+            <% }); %>
+        </ul>
+    <% } %>
+    <form method="POST" action="/students/add">
+        <div>
+            <label>Student ID:</label><br>
+            <input type="text" name="sid" value="<%= typeof sid !== 'undefined' ? sid : '' %>">
+        </div>
+        <div>
+            <label>Name:</label><br>
+            <input type="text" name="name" value="<%= typeof name !== 'undefined' ? name : '' %>">
+        </div>
+        <div>
+            <label>Age:</label><br>
+            <input type="number" name="age" value="<%= typeof age !== 'undefined' ? age : '' %>">
+        </div>
+        <div>
+            <input type="submit" value="Add Student">
+        </div>
+    </form>
+    <p><a href="/students">Back to Students</a></p>
+</body>
+</html>
