@@ -143,6 +143,33 @@ app.post('/students/edit/:sid', (req, res) => {
     })
 })
 
+// Grades page
+app.get('/grades', (req, res) => {
+    // This query joins student, grade, and module tables
+    // Orders by student name and grade (lowest to highest)
+    const query = `
+        SELECT 
+            s.name as student_name,
+            m.name as module_name,
+            g.grade
+        FROM 
+            student s
+        LEFT JOIN 
+            grade g ON s.sid = g.sid
+        LEFT JOIN 
+            module m ON g.mid = m.mid
+        ORDER BY 
+            s.name, g.grade`;
+
+    pool.query(query)
+    .then((grades) => {
+        res.render('grades', { grades: grades })
+    })
+    .catch((error) => {
+        res.send('Database error occurred')
+    })
+})
+
 app.listen(3004, () => {
     console.log("Server is running on port 3004")
 })
