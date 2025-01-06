@@ -6,27 +6,20 @@
 <body>
     <h1>Student Grades</h1>
     
-    <% var currentStudent = ''; %>
-    <% grades.forEach(function(grade) { %>
-        <% if (currentStudent !== grade.student_name) { %>
-            <% if (currentStudent !== '') { %>
-                </ul>
-            <% } %>
-            <h3><%= grade.student_name %></h3>
-            <ul>
-            <% currentStudent = grade.student_name; %>
-        <% } %>
-        
-        <% if (grade.module_name) { %>
-            <li>
-                <%= grade.module_name %>: <%= grade.grade %>
-            </li>
-        <% } %>
-    <% }); %>
-    
-    <% if (grades.length > 0) { %>
-        </ul>
-    <% } %>
+    <table border="1">
+        <tr>
+            <th>Student Name</th>
+            <th>Module</th>
+            <th>Grade</th>
+        </tr>
+        <% grades.forEach(function(grade) { %>
+            <tr>
+                <td><%= grade.student_name %></td>
+                <td><%= grade.module_name ? grade.module_name : ' ' %></td>
+                <td><%= grade.grade ? grade.grade : '-' %></td>
+            </tr>
+        <% }); %>
+    </table>
     
     <p><a href="/">Home</a></p>
 </body>
