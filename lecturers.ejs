@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lecturers (MongoDB)</title>
+</head>
+<body>
+    <h1>Lecturers (MongoDB)</h1>
+    
+    <% if (typeof error !== 'undefined') { %>
+        <p style="color: red;"><%= error %></p>
+    <% } %>
+
+    <table border="1">
+        <tr>
+            <th>Lecturer ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Action</th>
+        </tr>
+        <% lecturers.forEach(function(lecturer) { %>
+            <tr>
+                <td><%= lecturer._id %></td>
+                <td><%= lecturer.name %></td>
+                <td><%= lecturer.did %></td>
+                <td><a href="/lecturers/delete/<%= lecturer._id %>">Delete</a></td>
+            </tr>
+        <% }); %>
+    </table>
+    
+    <p><a href="/">Home</a></p>
+</body>
+</html>
