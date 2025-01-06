@@ -1,6 +1,7 @@
 var express = require('express')
 var pmysql = require('promise-mysql')
 var path = require('path')
+var { MongoClient } = require('mongodb')
 var app = express()
 
 // EJS
@@ -11,7 +12,7 @@ app.set('views', path.join(__dirname, '.'))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-// Database connection pool
+// MySQL Pool
 var pool
 pmysql.createPool({
     connectionLimit: 3,
@@ -26,6 +27,21 @@ pmysql.createPool({
 .catch((e) => {
     console.log("pool error:" + e)
 })
+
+// MongoDB connection
+var mongoURL = 'mongodb://localhost:27017'
+var mongoClient = new MongoClient(mongoURL)
+var mongoDb
+
+// Connect to MongoDB
+mongoClient.connect()
+    .then((client) => {
+        mongoDb = client.db('proj2024MongoDB')
+        console.log('Connected to MongoDB')
+    })
+    .catch((err) => {
+        console.log('MongoDB connection error:', err)
+    })
 
 // Home page
 app.get('/', (req, res) => {
@@ -145,8 +161,6 @@ app.post('/students/edit/:sid', (req, res) => {
 
 // Grades page
 app.get('/grades', (req, res) => {
-    // This query joins student, grade, and module tables
-    // Orders by student name and grade (lowest to highest)
     const query = `
         SELECT 
             s.name as student_name,
@@ -159,7 +173,7 @@ app.get('/grades', (req, res) => {
         LEFT JOIN 
             module m ON g.mid = m.mid
         ORDER BY 
-            s.name, g.grade`;
+            s.name, g.grade`
 
     pool.query(query)
     .then((grades) => {
@@ -168,6 +182,47 @@ app.get('/grades', (req, res) => {
     .catch((error) => {
         res.send('Database error occurred')
     })
+})
+
+// Lecturers page
+app.get('/lecturers', async (req, res) => {
+    try {
+        const lecturers = await mongoDb.collection('lecturers')
+            .find()
+            .sort({ _id: 1 })
+            .toArray()
+        res.render('lecturers', { lecturers: lecturers })
+    } catch (error) {
+        res.render('lecturers', { lecturers: [], error: 'Database error occurred' })
+    }
+})
+
+// Delete lecturer
+app.get('/lecturers/delete/:lid', async (req, res) => {
+    try {
+        // Check if lecturer teaches any modules
+        const [teachingModules] = await pool.query(
+            'SELECT * FROM module WHERE lecturer = ?', 
+            [req.params.lid]
+        )
+
+        if (teachingModules.length > 0) {
+            const lecturers = await mongoDb.collection('lecturers')
+                .find()
+                .sort({ _id: 1 })
+                .toArray()
+            res.render('lecturers', { 
+                lecturers: lecturers, 
+                error: `Cannot delete Lecturer ${req.params.lid} as they have associated modules`
+            })
+        } else {
+            // If no modules, delete the lecturer
+            await mongoDb.collection('lecturers').deleteOne({ _id: req.params.lid })
+            res.redirect('/lecturers')
+        }
+    } catch (error) {
+        res.send('Error occurred while deleting lecturer')
+    }
 })
 
 app.listen(3004, () => {
